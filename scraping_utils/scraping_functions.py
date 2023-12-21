@@ -1,3 +1,4 @@
+#import the necessary modules
 import requests
 import re
 from bs4 import BeautifulSoup, Comment
@@ -7,19 +8,19 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 
 def get_recipe_urls_from_pages(startPage: int, endPage: int) -> set:
     """
-    Finds the recipe URLs from the search pages specified.
+    Finds the recipe urls from the search pages specified.
 
-    Requests the html content of the given pages and scrapes them to obtain a set of recipe URLs.
+    Requests the html content of the given pages and scrapes them to obtain a set of recipe urls.
     
     Args:
-        startPage (int): The page to begin URL scraping on
-        endPage (int): The page to end URL scraping on
+        startPage (int): The page to begin url scraping on
+        endPage (int): The page to end url scraping on
 
     Returns:
-        set: The set of recipe URLs found.
+        set: The set of recipe urls found.
     """
 
-    #set the base URL and initialise an empty recipe URL set
+    #set the base url and initialise an empty recipe url set
     baseUrl = 'https://www.bbcgoodfood.com'
     recipeUrls = set()
 
@@ -43,29 +44,29 @@ def get_recipe_urls_from_pages(startPage: int, endPage: int) -> set:
         recipeCards = soup.find('div', class_='layout-md-rail__primary')
         recipeAnchorTags = recipeCards.find_all('a', class_='link d-block')
 
-        #for each anchor tag, obtain its link and add it to the recipe URL set
+        #for each anchor tag, obtain its link and add it to the recipe url set
         for anchorTag in recipeAnchorTags:
             link = f'{baseUrl}{anchorTag['href']}'
             recipeUrls.add(link)
 
-    #return the recipe URLs found
+    #return the recipe urls found
     return recipeUrls 
 
 
 def get_recipe_details(recipeUrl: str) -> tuple:
     """
-    Finds the recipe details from a given URL.
+    Finds the recipe details from a given url.
 
-    Requests the html content of the given URL page and scrapes useful information off and processes them.
+    Requests the html content of the given url page and scrapes useful information off and processes them.
     
     Args:
-        recipeUrl (str): The recipe page URL to scrape from
+        recipeUrl (str): The recipe page url to scrape from
 
     Returns:
-        tuple | None: The tuple of recipe attributes scraped from the URL or None if the page cannot be reached
+        tuple | None: The tuple of recipe attributes scraped from the url or None if the page cannot be reached
         structure:
             - title (str): The title of the recipe.
-            - image_link (str): The URL of the recipe image.
+            - image_link (str): The url of the recipe image.
             - raw_ingredients (List[str]): List of raw ingredient names.
             - measured_ingredients (List[str]): List of ingredients with measurements.
             - method (List[str]): List of cooking steps.
@@ -77,7 +78,7 @@ def get_recipe_details(recipeUrl: str) -> tuple:
             - ratings_count (int): Number of ratings given.
             - calories, fat, saturates, carbs, sugars, fibre, protein, salt (float): Nutritional information.
     """
-    #request the URL and obtain the response with an appropriate request
+    #request the url and obtain the response with an appropriate request
     response = requests.get(recipeUrl)
 
     #if the page loaded did not load correctly, print an error and return None 
