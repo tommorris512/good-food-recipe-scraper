@@ -1,6 +1,6 @@
 #import the necessary modules
 import requests
-from typing import List, Dict, Tuple
+from typing import List, Dict, Set, Tuple
 from bs4 import BeautifulSoup
 from bs4.element import ResultSet
 from text_utils.text_manipulation import timeStringToMinutes, findFirstNumber, findRawIngredient
@@ -49,7 +49,7 @@ def obtainNutrients(nutritionalContent: ResultSet[any]) -> Dict[str, float]:
             
     
 
-def getRecipeUrlsFromPages(startPage: int, endPage: int) -> set:
+def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str]:
     """
     Finds the recipe urls from the search pages specified.
 
@@ -96,7 +96,7 @@ def getRecipeUrlsFromPages(startPage: int, endPage: int) -> set:
     return recipeUrls 
 
 
-def getRecipeDetails(recipeUrl: str) -> tuple:
+def getRecipeDetails(recipeUrl: str) -> Tuple[any]:
     """
     Finds the recipe details from a given url.
 
@@ -126,7 +126,7 @@ def getRecipeDetails(recipeUrl: str) -> tuple:
 
     #if the page loaded did not load correctly, print an error and return None 
     if response.status_code != 200:
-        print("Failed to retrieve recipe page.")
+        print('Failed to retrieve recipe page.')
         return None
         
     #create a new soup as a html parser over the html document returned
@@ -142,8 +142,14 @@ def getRecipeDetails(recipeUrl: str) -> tuple:
     ingredients = soup.find('section', class_='recipe__ingredients').find_all('li')
     rawIngredients, measuredIngredients = obtainIngredients(ingredients)
 
-    #obtain the author of the 
-    author = soup.find('div', class_='author-link').get_text(strip=True)
+    #obtain the author div of the page
+    authorDiv = soup.find('div', class_='author-link')
+
+    #if an author for the recipe exists, assign it
+    if (authorDiv):
+        author = authorDiv.get_text(strip=True)
+    else:
+        author = None
 
     #extract method steps and intialise an empty method list
     steps = soup.find('section', class_='recipe__method-steps').find_all('p')
