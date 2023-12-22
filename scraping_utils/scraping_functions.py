@@ -7,7 +7,21 @@ from text_utils.text_manipulation import timeStringToMinutes, findFirstNumber, f
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
 
+
 def obtainIngredients(ingredients: ResultSet[any]) -> Tuple[List[str]]:
+    """
+    Finds the measured and raw ingredients from the ingredients content of a recipe page.
+
+    Adds the listed ingredients to a measured ingredients list. 
+    For each ingredient, the raw ingredient is extracted by accessing the anchored section of text, or, if this does not exist, by splicing with HTML comments and finding the most likely raw ingredient name.
+    
+    Args:
+        ingredients (ResultSet[any]): The content of the ingredients list from a recipe page
+
+    Returns:
+        Tuple[List[str]]: The lists of both raw and measured ingredients obtained from the content parsed
+    """
+
     measuredIngredients = []
     rawIngredients = []
 
@@ -34,22 +48,41 @@ def obtainIngredients(ingredients: ResultSet[any]) -> Tuple[List[str]]:
 
     return rawIngredients, measuredIngredients
 
+
 def obtainNutrients(nutritionalContent: ResultSet[any]) -> Dict[str, float]:
+    """
+    Finds the nutrient information from the nutritional content section of a recipe page.
+
+    Find each key-value pair in content of the recipe page and append it to and return a populated dictionary.
+    
+    Args:
+        nutritionalContent (ResultSet[any]): The content of the nutrient information from a recipe page
+
+    Returns:
+        Dict[str, float]: The dictionary of nutrient key-value pairs.
+    """
+
+    #initialise an empty dictionary of nutrients
     nutrients = {}
 
-    #for each nutritional value, obtain the key and numerical value for that category
+    #for each nutritional value, try to obtain the key and numerical value for that category
     for nutrient in nutritionalContent:
-        nutrientType = nutrient.find('td', class_='key-value-blocks__key').get_text(strip=True)
-        nutrientValue = findFirstNumber(nutrient.find('td', class_='key-value-blocks__value').get_text(strip=True))
+        try:
+            nutrientType = nutrient.find('td', class_='key-value-blocks__key').get_text(strip=True)
+            nutrientValue = findFirstNumber(nutrient.find('td', class_='key-value-blocks__value').get_text(strip=True))
 
-        nutrients[nutrientType] = nutrientValue
+            #add the key-value pair to the dictionary
+            nutrients[nutrientType] = nutrientValue
+
+        #if a key-value pair cannot be accessed correctly, silently proceed
+        except(Exception):
+            pass
     
-    print(nutrients)
-    return nutrients
-            
+    #return the populated dictionary of nutrient information
+    return nutrients          
     
 
-def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str] | None:
+def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str]:
     """
     Finds the recipe urls from the search pages specified.
 
@@ -60,7 +93,7 @@ def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str] | None:
         endPage (int): The page to end url scraping on
 
     Returns:
-        Set[str] | None: The set of recipe urls found.
+        Set[str]: The set of recipe urls found.
     """
 
     #set the base url and initialise an empty recipe url set
@@ -91,18 +124,13 @@ def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str] | None:
             #for each anchor tag, obtain its link and add it to the recipe url set
             for anchorTag in recipeAnchorTags:
                 link = f'{baseUrl}{anchorTag['href']}'
-                recipeUrls.add(link)
-
-            #return the recipe urls found
-            return recipeUrls 
+                recipeUrls.add(link)            
         
         #if an exception is thrown whilst extracting the data, output the failure and return None
         except(Exception):
             print(f'Error occured accessing recipe at page number {page}')
-            return None
 
-    
-    
+    return recipeUrls 
 
 
 def getRecipeDetails(recipeUrl: str) -> Tuple[any] | None:
@@ -201,7 +229,3 @@ def getRecipeDetails(recipeUrl: str) -> Tuple[any] | None:
     except(Exception):
         print(f'Error occured accessing recipe at {recipeUrl}')
         return None
-
-   
-    
-        
