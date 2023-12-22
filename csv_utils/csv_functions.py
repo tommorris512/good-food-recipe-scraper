@@ -19,12 +19,12 @@ def readRecipeUrlsFromCsv(filename: str) -> List[str]:
     recipeUrls = []
 
     try:
-        with open(filename, mode='r') as file:
+        with open(filename, mode='r', encoding='utf-8') as file:
             #set a new dictionary reader and add each url to the list
             reader = csv.DictReader(file)
 
             for row in reader:
-                recipeUrls.append(str(row['Recipe Urls']))
+                recipeUrls.append(str(row['Recipe URLs']))
 
     #if an error is thrown, print the error to stdout
     except Exception as e:
@@ -52,7 +52,7 @@ def readRecipeDetailsFromCsv(filename: str) -> List[dict]:
     recipeDetails = []
 
     try:
-        with open(filename, mode='r') as file:
+        with open(filename, mode='r', encoding='utf-8') as file:
             #set a new dictionary reader and add each recipe as a dictionary to the list
             reader = csv.DictReader(file)
 
@@ -87,15 +87,15 @@ def writeRecipeUrlsToCsv(startPage: int, endPage: int, filename: str) -> None:
 
     #obtain the urls from the specified pages and output a message that file writing has begun
     recipeUrls = getRecipeUrlsFromPages(startPage, endPage)
-    print(f'Writing urls to file {filename}')
+    print(f'Writing URLs to file {filename}')
 
     #attempt to open the specified file in write mode and create a new csv writer
     try:
-        with open(filename, mode='w', newline='') as file:
+        with open(filename, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
 
             #write a header followed by all the urls found
-            writer.writerow(['Recipe Urls'])
+            writer.writerow(['Recipe URLs'])
 
             for url in recipeUrls:
                 writer.writerow([url])
@@ -125,14 +125,14 @@ def writeRecipeDetailsToCsv(recipeUrls: List[str], filename: str) -> None:
 
     #attempt to open the specified file in write mode and create a new csv writer
     try:
-        with open(filename, mode='w', newline='') as file:
+        with open(filename, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
 
             #write a header followed by all details found for each recipe
             writer.writerow(['Title', 'Image Link', 'Raw Ingredients', 'Measured Ingredients', 'Method', 'Author', 'Prep Time', 'Cook Time', 'Difficulty Level', 'Rating', 'Ratings Count', 'Calories', 'Fat', 'Saturates', 'Carbs', 'Sugars', 'Fibre', 'Protein', 'Salt'])
 
             for url in recipeUrls:
-                print(f"Inpsecting url {url}")
+                print(f"Obtaining details from URL {url}")
 
                 details = getRecipeDetails(url)
                 
