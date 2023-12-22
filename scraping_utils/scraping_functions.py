@@ -132,58 +132,67 @@ def getRecipeDetails(recipeUrl: str) -> Tuple[any]:
     #create a new soup as a html parser over the html document returned
     soup = BeautifulSoup(response.text, 'html.parser')
 
-    #obtain the title of  the recipe
-    title = soup.find('div', class_='post-header__title').get_text(strip=True)
+    try:
+        #obtain the title of  the recipe
+        title = soup.find('div', class_='post-header__title').get_text(strip=True)
 
-    #obtain the image link
-    imageLink = soup.find('div', class_='image__container').find('img', class_='image__img')['src']
+        #obtain the image link
+        imageLink = soup.find('div', class_='image__container').find('img', class_='image__img')['src']
 
-    #obtain the list of ingredients and initialise measured and raw ingredient list
-    ingredients = soup.find('section', class_='recipe__ingredients').find_all('li')
-    rawIngredients, measuredIngredients = obtainIngredients(ingredients)
+        #obtain the list of ingredients and initialise measured and raw ingredient list
+        ingredients = soup.find('section', class_='recipe__ingredients').find_all('li')
+        rawIngredients, measuredIngredients = obtainIngredients(ingredients)
 
-    #obtain the author div of the page
-    authorDiv = soup.find('div', class_='author-link')
+        #obtain the author div of the page
+        authorDiv = soup.find('div', class_='author-link')
 
-    #if an author for the recipe exists, assign it
-    if (authorDiv):
-        author = authorDiv.get_text(strip=True)
-    else:
-        author = None
+        #if an author for the recipe exists, assign it
+        if (authorDiv):
+            author = authorDiv.get_text(strip=True)
+        else:
+            author = None
 
-    #extract method steps and intialise an empty method list
-    steps = soup.find('section', class_='recipe__method-steps').find_all('p')
-    method = []
+        #extract method steps and intialise an empty method list
+        steps = soup.find('section', class_='recipe__method-steps').find_all('p')
+        method = []
 
-    #populate the method list with the steps found
-    for step in steps:
-        method.append(step.get_text(strip=True))
+        #populate the method list with the steps found
+        for step in steps:
+            method.append(step.get_text(strip=True))
 
-    #obtain the set of prep and cook times and set the times to zero
-    timeElements = soup.select('.post-header__cook-and-prep-time time')
-    prepTime=0
-    cookTime=0
+        #obtain the set of prep and cook times and set the times to zero
+        timeElements = soup.select('.post-header__cook-and-prep-time time')
+        prepTime=0
+        cookTime=0
 
-    #reassign the prep and cook times dependent upon their existence
-    if (len(timeElements) > 0):
-        prepTime = timeStringToMinutes(timeElements[0].get_text(strip=True))
-        if (len(timeElements) > 1):
-            cookTime = timeStringToMinutes(timeElements[1].get_text(strip=True))
+        #reassign the prep and cook times dependent upon their existence
+        if (len(timeElements) > 0):
+            prepTime = timeStringToMinutes(timeElements[0].get_text(strip=True))
+            if (len(timeElements) > 1):
+                cookTime = timeStringToMinutes(timeElements[1].get_text(strip=True))
 
-    #obtain the difficulty level of the recipe
-    difficultyLevel = soup.find('div', class_='post-header__skill-level').get_text(strip=True)
+        #obtain the difficulty level of the recipe
+        difficultyLevel = soup.find('div', class_='post-header__skill-level').get_text(strip=True)
 
-    #obtain the rating and ratings count parent div
-    ratingsDiv = soup.find('div', class_='rating__values')
+        #obtain the rating and ratings count parent div
+        ratingsDiv = soup.find('div', class_='rating__values')
 
-    #find the rating and ratings count numbers by finding the first numerical value in the string
-    rating = findFirstNumber(ratingsDiv.find('span', class_='sr-only').get_text(strip=True))
-    ratingsCount = int(findFirstNumber(ratingsDiv.find('span', class_='rating__count-text').get_text(strip=True)))
+        #find the rating and ratings count numbers by finding the first numerical value in the string
+        rating = findFirstNumber(ratingsDiv.find('span', class_='sr-only').get_text(strip=True))
+        ratingsCount = int(findFirstNumber(ratingsDiv.find('span', class_='rating__count-text').get_text(strip=True)))
 
-    #obtain the nutrient information parent table
-    nutritionalContent = soup.find('table', class_='key-value-blocks').find_all('tr', class_='key-value-blocks__item')
-    nutrients = obtainNutrients(nutritionalContent)
+        #obtain the nutrient information parent table
+        nutritionalContent = soup.find('table', class_='key-value-blocks').find_all('tr', class_='key-value-blocks__item')
+        nutrients = obtainNutrients(nutritionalContent)
 
-    #return the recipe information as a tuple
-    return (title, imageLink, rawIngredients, measuredIngredients, method, author, prepTime, cookTime, difficultyLevel, rating, ratingsCount, nutrients.get('kcal'), nutrients.get('fat'), nutrients.get('saturates'), nutrients.get('carbs'), nutrients.get('sugars'), nutrients.get('fibre'), nutrients.get('protein'), nutrients.get('salt'))
+         #return the recipe information as a tuple
+        return (title, imageLink, rawIngredients, measuredIngredients, method, author, prepTime, cookTime, difficultyLevel, rating, ratingsCount, nutrients.get('kcal'), nutrients.get('fat'), nutrients.get('saturates'), nutrients.get('carbs'), nutrients.get('sugars'), nutrients.get('fibre'), nutrients.get('protein'), nutrients.get('salt'))
+
+    #if an exception is thrown whilst extracting the data, output the failure and return None
+    except(Exception):
+        print(f'Error occured accessing recipe at {recipeUrl}')
+        return None
+
+   
+    
         
