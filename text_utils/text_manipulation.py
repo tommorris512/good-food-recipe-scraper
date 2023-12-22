@@ -2,7 +2,7 @@
 import re
 from typing import List
 
-def find_first_number(text: str) -> float | None:
+def findFirstNumber(text: str) -> float | None:
     """
     Finds the first number in a string of text.
 
@@ -33,7 +33,7 @@ def find_first_number(text: str) -> float | None:
         return None
 
 
-def time_string_to_minutes(text: str) -> int:
+def timeStringToMinutes(text: str) -> int:
     """
     Finds the total number of minutes from a formatted hours and minutes piece of text.
 
@@ -69,7 +69,7 @@ def time_string_to_minutes(text: str) -> int:
 
     return totalMinutes
 
-def contains_brackets(text: str) -> bool:
+def containsBrackets(text: str) -> bool:
     """
     Determines if a set of brackets exists in a piece of text.
     
@@ -84,7 +84,7 @@ def contains_brackets(text: str) -> bool:
     return '(' in text and ')' in text
 
 
-def contains_number(text: str) -> bool:
+def containsNumber(text: str) -> bool:
     """
     Determines if a number exists in a piece of text.
 
@@ -98,9 +98,9 @@ def contains_number(text: str) -> bool:
     """
 
     #return whether a number could be found
-    return find_first_number(text) != None
+    return findFirstNumber(text) != None
 
-def contains_keywords(text: str, keywords: List[str]) -> int:
+def containsKeywords(text: str, keywords: List[str]) -> int:
     """
     Finds the number of defined keywords
     
@@ -123,7 +123,7 @@ def contains_keywords(text: str, keywords: List[str]) -> int:
     
     return keywordCount
         
-def find_raw_ingredient(texts: List[str]) -> str:
+def findRawIngredient(texts: List[str]) -> str:
     """
     Approximates a raw ingredient from a detailed, segmented list of text
 
@@ -143,13 +143,13 @@ def find_raw_ingredient(texts: List[str]) -> str:
 
     #for each text piece in the list, set the score to the number of keywords found
     for text in texts:
-        suitabilityScore = contains_keywords(text, keywords)
+        suitabilityScore = containsKeywords(text, keywords)
 
         #increment the score if the text contains brackets or a number
-        if (contains_brackets(text)):
+        if (containsBrackets(text)):
             suitabilityScore += 1
         
-        if (contains_number(text)):
+        if (containsNumber(text)):
             suitabilityScore += 1
 
         #add the text to the dictionary with an associated value of its score

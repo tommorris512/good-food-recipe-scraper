@@ -1,12 +1,55 @@
 #import the necessary modules
 import requests
-import re
-from bs4 import BeautifulSoup, Comment
-from text_utils.text_manipulation import time_string_to_minutes, find_first_number, find_raw_ingredient
+from typing import List, Dict, Tuple
+from bs4 import BeautifulSoup
+from bs4.element import ResultSet
+from text_utils.text_manipulation import timeStringToMinutes, findFirstNumber, findRawIngredient
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
 
-def get_recipe_urls_from_pages(startPage: int, endPage: int) -> set:
+def obtainIngredients(ingredients: ResultSet[any]) -> Tuple[List[str]]:
+    measuredIngredients = []
+    rawIngredients = []
+
+    #for each ingredient in the document, add it to the measured ingredient list
+    for ingredient in ingredients:
+        measuredIngredients.append(ingredient.get_text())
+
+        #attempt to find the raw ingredient name in an anchor tag and add it
+        anchorTag = ingredient.find('a', class_='link--styled')
+        if anchorTag:
+            rawIngredients.append(anchorTag.get_text(strip=True).replace(',', ''))
+
+        #otherwise attempt to find the first comment separator and choose the raw ingredient name
+        else:
+            ingredient_strings = []
+
+            # Iterate through the contents of the <li> tag
+            for content in ingredient.contents:
+                # Check if the content is a NavigableString (text node)
+                if isinstance(content, str) and (content.strip()):
+                    ingredient_strings.append(str(content).replace(',','').strip())
+
+            rawIngredients.append(findRawIngredient(ingredient_strings))
+
+    return rawIngredients, measuredIngredients
+
+def obtainNutrients(nutritionalContent: ResultSet[any]) -> Dict[str, float]:
+    nutrients = {}
+
+    #for each nutritional value, obtain the key and numerical value for that category
+    for nutrient in nutritionalContent:
+        nutrientType = nutrient.find('td', class_='key-value-blocks__key').get_text(strip=True)
+        nutrientValue = findFirstNumber(nutrient.find('td', class_='key-value-blocks__value').get_text(strip=True))
+
+        nutrients[nutrientType] = nutrientValue
+    
+    print(nutrients)
+    return nutrients
+            
+    
+
+def getRecipeUrlsFromPages(startPage: int, endPage: int) -> set:
     """
     Finds the recipe urls from the search pages specified.
 
@@ -53,7 +96,7 @@ def get_recipe_urls_from_pages(startPage: int, endPage: int) -> set:
     return recipeUrls 
 
 
-def get_recipe_details(recipeUrl: str) -> tuple:
+def getRecipeDetails(recipeUrl: str) -> tuple:
     """
     Finds the recipe details from a given url.
 
@@ -97,29 +140,7 @@ def get_recipe_details(recipeUrl: str) -> tuple:
 
     #obtain the list of ingredients and initialise measured and raw ingredient list
     ingredients = soup.find('section', class_='recipe__ingredients').find_all('li')
-    measuredIngredients = []
-    rawIngredients = []
-
-    #for each ingredient in the document, add it to the measured ingredient list
-    for ingredient in ingredients:
-        measuredIngredients.append(ingredient.get_text())
-
-        #attempt to find the raw ingredient name in an anchor tag and add it
-        anchorTag = ingredient.find('a', class_='link--styled')
-        if anchorTag:
-            rawIngredients.append(anchorTag.get_text(strip=True).replace(',', ''))
-
-        #otherwise attempt to find the first comment separator and choose the raw ingredient name
-        else:
-            ingredient_strings = []
-
-            # Iterate through the contents of the <li> tag
-            for content in ingredient.contents:
-                # Check if the content is a NavigableString (text node)
-                if isinstance(content, str) and (content.strip()):
-                    ingredient_strings.append(str(content).replace(',','').strip())
-
-            rawIngredients.append(find_raw_ingredient(ingredient_strings))
+    rawIngredients, measuredIngredients = obtainIngredients(ingredients)
 
     #obtain the author of the 
     author = soup.find('div', class_='author-link').get_text(strip=True)
@@ -139,9 +160,9 @@ def get_recipe_details(recipeUrl: str) -> tuple:
 
     #reassign the prep and cook times dependent upon their existence
     if (len(timeElements) > 0):
-        prepTime = time_string_to_minutes(timeElements[0].get_text(strip=True))
+        prepTime = timeStringToMinutes(timeElements[0].get_text(strip=True))
         if (len(timeElements) > 1):
-            cookTime = time_string_to_minutes(timeElements[1].get_text(strip=True))
+            cookTime = timeStringToMinutes(timeElements[1].get_text(strip=True))
 
     #obtain the difficulty level of the recipe
     difficultyLevel = soup.find('div', class_='post-header__skill-level').get_text(strip=True)
@@ -150,36 +171,13 @@ def get_recipe_details(recipeUrl: str) -> tuple:
     ratingsDiv = soup.find('div', class_='rating__values')
 
     #find the rating and ratings count numbers by finding the first numerical value in the string
-    rating = find_first_number(ratingsDiv.find('span', class_='sr-only').get_text(strip=True))
-    ratingsCount = int(find_first_number(ratingsDiv.find('span', class_='rating__count-text').get_text(strip=True)))
+    rating = findFirstNumber(ratingsDiv.find('span', class_='sr-only').get_text(strip=True))
+    ratingsCount = int(findFirstNumber(ratingsDiv.find('span', class_='rating__count-text').get_text(strip=True)))
 
     #obtain the nutrient information parent table
     nutritionalContent = soup.find('table', class_='key-value-blocks').find_all('tr', class_='key-value-blocks__item')
-    
-    #for each nutritional value, obtain the key and numerical value for that category
-    for nutrient in nutritionalContent:
-        nutrientType = nutrient.find('td', class_='key-value-blocks__key').get_text(strip=True)
-        nutrientValue = find_first_number(nutrient.find('td', class_='key-value-blocks__value').get_text(strip=True))
-
-        #match the value to the correct category for return
-        match(nutrientType):
-            case "kcal":
-                calories = nutrientValue
-            case "fat":
-                fat = nutrientValue
-            case "saturates":
-                saturates = nutrientValue
-            case "carbs":
-                carbs = nutrientValue
-            case "sugars":
-                sugars = nutrientValue
-            case "fibre":
-                fibre = nutrientValue
-            case "protein":
-                protein = nutrientValue
-            case "salt":
-                salt = nutrientValue
+    nutrients = obtainNutrients(nutritionalContent)
 
     #return the recipe information as a tuple
-    return (title, imageLink, rawIngredients, measuredIngredients, method, author, prepTime, cookTime, difficultyLevel, rating, ratingsCount, calories, fat, saturates, carbs, sugars, fibre, protein, salt)
+    return (title, imageLink, rawIngredients, measuredIngredients, method, author, prepTime, cookTime, difficultyLevel, rating, ratingsCount, nutrients.get('kcal'), nutrients.get('fat'), nutrients.get('saturates'), nutrients.get('carbs'), nutrients.get('sugars'), nutrients.get('fibre'), nutrients.get('protein'), nutrients.get('salt'))
         

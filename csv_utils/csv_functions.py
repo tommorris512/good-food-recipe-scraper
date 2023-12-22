@@ -1,10 +1,10 @@
 #import the necessary modules
 import csv
 from typing import List
-from scraping_utils.scraping_functions import get_recipe_urls_from_pages, get_recipe_details
+from scraping_utils.scraping_functions import getRecipeDetails, getRecipeUrlsFromPages
 
 
-def read_recipe_urls_from_csv(filename: str) -> List[str]:
+def readRecipeUrlsFromCsv(filename: str) -> List[str]:
     """
     Reads the recipe urls from a given csv file.
     
@@ -37,7 +37,7 @@ def read_recipe_urls_from_csv(filename: str) -> List[str]:
     return recipeUrls
 
 
-def read_recipe_details_from_csv(filename: str) -> List[dict]:
+def readRecipeDetailsFromCsv(filename: str) -> List[dict]:
     """
     Reads the recipe details of recipes from a given csv file.
     
@@ -70,7 +70,7 @@ def read_recipe_details_from_csv(filename: str) -> List[dict]:
     return recipeDetails
 
 
-def write_recipe_urls_to_csv(startPage: int, endPage: int, filename: str) -> None:
+def writeRecipeUrlsToCsv(startPage: int, endPage: int, filename: str) -> None:
     """
     Writes the recipe urls from a range of pages to a specified csv file.
 
@@ -86,7 +86,7 @@ def write_recipe_urls_to_csv(startPage: int, endPage: int, filename: str) -> Non
     """
 
     #obtain the urls from the specified pages and output a message that file writing has begun
-    recipeUrls = get_recipe_urls_from_pages(startPage, endPage)
+    recipeUrls = getRecipeUrlsFromPages(startPage, endPage)
     print(f'Writing urls to file {filename}')
 
     #attempt to open the specified file in write mode and create a new csv writer
@@ -109,7 +109,7 @@ def write_recipe_urls_to_csv(startPage: int, endPage: int, filename: str) -> Non
         file.close()
 
 
-def write_recipe_details_to_csv(recipeUrls: List[str], filename: str) -> None:
+def writeRecipeDetailsToCsv(recipeUrls: List[str], filename: str) -> None:
     """
     Writes the recipe details from a list of urls to a specified csv file.
 
@@ -134,7 +134,7 @@ def write_recipe_details_to_csv(recipeUrls: List[str], filename: str) -> None:
             for url in recipeUrls:
                 print(f"Inpsecting url {url}")
 
-                details = get_recipe_details(url)
+                details = getRecipeDetails(url)
                 
                 if details:
                     writer.writerow(details)
