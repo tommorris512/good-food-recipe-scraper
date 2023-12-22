@@ -49,7 +49,7 @@ def obtainNutrients(nutritionalContent: ResultSet[any]) -> Dict[str, float]:
             
     
 
-def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str]:
+def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str] | None:
     """
     Finds the recipe urls from the search pages specified.
 
@@ -60,7 +60,7 @@ def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str]:
         endPage (int): The page to end url scraping on
 
     Returns:
-        set: The set of recipe urls found.
+        Set[str] | None: The set of recipe urls found.
     """
 
     #set the base url and initialise an empty recipe url set
@@ -83,20 +83,29 @@ def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str]:
         #instantiate a new soup object as a html parser over the response received
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        #obtain the recipe cards div on the page and generate a set of anchor tag links
-        recipeCards = soup.find('div', class_='layout-md-rail__primary')
-        recipeAnchorTags = recipeCards.find_all('a', class_='link d-block')
+        try:
+            #obtain the recipe cards div on the page and generate a set of anchor tag links
+            recipeCards = soup.find('div', class_='layout-md-rail__primary')
+            recipeAnchorTags = recipeCards.find_all('a', class_='link d-block')
 
-        #for each anchor tag, obtain its link and add it to the recipe url set
-        for anchorTag in recipeAnchorTags:
-            link = f'{baseUrl}{anchorTag['href']}'
-            recipeUrls.add(link)
+            #for each anchor tag, obtain its link and add it to the recipe url set
+            for anchorTag in recipeAnchorTags:
+                link = f'{baseUrl}{anchorTag['href']}'
+                recipeUrls.add(link)
 
-    #return the recipe urls found
-    return recipeUrls 
+            #return the recipe urls found
+            return recipeUrls 
+        
+        #if an exception is thrown whilst extracting the data, output the failure and return None
+        except(Exception):
+            print(f'Error occured accessing recipe at page number {page}')
+            return None
+
+    
+    
 
 
-def getRecipeDetails(recipeUrl: str) -> Tuple[any]:
+def getRecipeDetails(recipeUrl: str) -> Tuple[any] | None:
     """
     Finds the recipe details from a given url.
 
@@ -106,7 +115,7 @@ def getRecipeDetails(recipeUrl: str) -> Tuple[any]:
         recipeUrl (str): The recipe page url to scrape from
 
     Returns:
-        tuple | None: The tuple of recipe attributes scraped from the url or None if the page cannot be reached
+        Tuple[any] | None: The tuple of recipe attributes scraped from the url or None if the page cannot be reached
         structure:
             - title (str): The title of the recipe.
             - image_link (str): The url of the recipe image.
