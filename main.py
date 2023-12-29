@@ -1,6 +1,6 @@
 import os
 from typing import Tuple
-from scraping_utils.scraping_functions import getRecipeUrlsFromPages, getRecipeDetails
+from scraping_utils.scraping_functions import getRecipeUrlsFromPages
 from csv_utils.csv_functions import writeRecipeUrlsToCsv, writeRecipeDetailsToCsv
 
 
