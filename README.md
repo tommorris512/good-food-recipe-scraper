@@ -41,11 +41,12 @@ Additional functions for facilitating the web scraping correctly are contained w
 ## Usage
 Clone the repository, (including utility directories, such as `csv_utils`)
 
-Ensure all required modules are installed that are not within the standard python library. This includes:
+Ensure all required modules and dependencies are installed that are not within the standard python library. This includes:
  - requests _(for obtaining the HTML content)_
  - bs4 _(for data extraction from HTML content)_
+ - ingredient-parser-nlp _(for raw ingredient name extraction from the HTML content)_
+ - averaged_perceptron_tagger from nltk _(for utilising the NLP module correctly)_
 
-This can be achieved by executing:
-`pip install bs4 requests`
+This can be achieved by executing the included `setup.py` file.
 
 Once all modules are installed, simply run the included `main.py` file.
