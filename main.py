@@ -1,6 +1,6 @@
 import os
 from typing import Tuple
-from scraping_utils.scraping_functions import getRecipeUrlsFromPages
+from scraping_utils.scraping_functions import getRecipeUrlsFromPages, getRecipeDetails
 from csv_utils.csv_functions import writeRecipeUrlsToCsv, writeRecipeDetailsToCsv
 
 
@@ -16,6 +16,27 @@ def printMenuOptions() -> None:
     print('Choose an option:')
     print('1 - Write recipe URLs to CSV')
     print('2 - Write recipe details to CSV')
+
+
+def getUserDecision() -> bool:
+    """
+    Obtain a boolean decision from the user.
+
+    Returns:
+        bool: The decision made by the user
+    """
+
+    #while no valid decision is provided, take an input converted to lower case
+    while True:
+        response = input().lower()
+
+        #return the appropriate state for a valid response, and print an error otherwise
+        if (response == 'y'):
+            return True
+        elif (response == 'n'):
+            return False
+        else:
+            print('Invalid input, please choose "y" or "n" to confirm')
 
 
 def getFilename() -> str:
@@ -39,20 +60,8 @@ def getFilename() -> str:
             print('Warning, file already exists and will be overwritten. Do you wish to proceed (y/n)')
 
             #set a flag to determine if the overwriting decision response is acceptible
-            validResponse = False
-            
-            #while no valid decision is provided, take an input converted to lower case
-            while (not validResponse):
-                response = input().lower()
-
-                #overwrite or not dependent on the decision and output an error for an invalid response
-                if (response == 'y'):
-                    validResponse = True
-                    acceptibleFilename = True
-                elif (response == 'n'):
-                    validResponse = True
-                else:
-                    print('Invalid input, please choose y or n to confirm')
+            if(getUserDecision()):
+                acceptibleFilename = True
 
         #otherwise if the file does not exist, proceed as normal
         else:
@@ -145,15 +154,18 @@ def main() -> None:
             startPage, endPage = getPageNumbers()
             filename = getFilename()
 
+            #determine if additional precision is to be used for ingredient names
+            print('Use additonal precision? This uses NLP more excessively to determine raw ingredient names at the cost of efficiency. (y/n)')
+            precise = getUserDecision()
+
             recipeUrls = getRecipeUrlsFromPages(startPage, endPage)
-            writeRecipeDetailsToCsv(recipeUrls, filename)
+            writeRecipeDetailsToCsv(recipeUrls, filename, precise)
             print(f'Recipe details successfully written to {filename}')
 
         #otherwise, output an error and re-output the choice selection
         else:
             print(f'Invalid input, received: {choice}')
             printMenuOptions()      
-           
 
 #run the main program
 main()

@@ -109,7 +109,7 @@ def writeRecipeUrlsToCsv(startPage: int, endPage: int, filename: str) -> None:
         file.close()
 
 
-def writeRecipeDetailsToCsv(recipeUrls: List[str], filename: str) -> None:
+def writeRecipeDetailsToCsv(recipeUrls: List[str], filename: str, precise: bool) -> None:
     """
     Writes the recipe details from a list of urls to a specified csv file.
 
@@ -118,6 +118,7 @@ def writeRecipeDetailsToCsv(recipeUrls: List[str], filename: str) -> None:
     Args:
         recipeUrls (List[str]): The list of recipe page urls to scrape details from
         filename (str): The csv file to write recipe details to
+        precise (bool): Determines whether additional precision should be used for obtaining ingredient names
 
     Returns:
         None
@@ -134,7 +135,7 @@ def writeRecipeDetailsToCsv(recipeUrls: List[str], filename: str) -> None:
             for url in recipeUrls:
                 print(f"Obtaining details from URL {url}")
 
-                details = getRecipeDetails(url)
+                details = getRecipeDetails(url, precise)
                 
                 if details:
                     writer.writerow(details)

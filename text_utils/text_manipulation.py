@@ -1,6 +1,7 @@
 #import the regex library
 import re
 from typing import List
+from ingredient_parser import parse_ingredient
 
 def findFirstNumber(text: str) -> float | None:
     """
@@ -68,110 +69,20 @@ def timeStringToMinutes(text: str) -> int:
     totalMinutes += totalHours * 60
 
     return totalMinutes
-
-def containsBrackets(text: str) -> bool:
-    """
-    Determines if a set of brackets exists in a piece of text.
-    
-    Args:
-        text (str): The string to inspect
-
-    Returns:
-        bool: Whether the text contains a set of brackets
-    """
-
-    #return whether both bracket characters exist in the string
-    return '(' in text and ')' in text
-
-
-def containsNumber(text: str) -> bool:
-    """
-    Determines if a number exists in a piece of text.
-
-    Uses the find_first_number function to determine if a piece of text contains a numeric value.
-    
-    Args:
-        text (str): The string to inspect
-
-    Returns:
-        bool: Whether the text contains a number
-    """
-
-    #return whether a number could be found
-    return findFirstNumber(text) != None
-
-def containsKeywords(text: str, keywords: List[str]) -> int:
-    """
-    Finds the number of defined keywords
-    
-    Args:
-        text (str): The string to inspect
-
-    Returns:
-        bool: Whether the text contains a set of brackets
-    """
-
-    #set the keyword count to zero, and iterate over each keyword
-    keywordCount = 0
-
-    for keyword in keywords:
-
-        #if the keyword exists in the text, increment its counter
-        if keyword in text:
-            keywordCount += 1
-
-    
-    return keywordCount
         
-def findRawIngredient(texts: List[str]) -> str:
+def findRawIngredient(ingredientText: str) -> str:
     """
-    Approximates a raw ingredient from a detailed, segmented list of text
+    Approximates a raw ingredient from a measured ingredient piece of text.
 
-    Develops a suitability score for each piece of text in the list, and chooses the best one. 
-    The score is derived from bracket presence, numerical value presence and keyword count.
+    Calls the ingredient_parser NLP to find and return the most suitable ingredient name.
     
     Args:
-        texts (List[str]): The list of text pieces to inspect
+        ingredientText (str): The measured ingredient string to inspect
 
     Returns:
-        str: The most suitable piece of text for a raw ingredient
+        str | None: The raw ingredient name, or None if no name could be found
     """
-
-    #define an empty dictionary and a list of keywords to check
-    suitability = {}
-    keywords = ['tbsp', 'tsp', 'oz', 'lb', 'ml', 'kg', 'cup', 'can', 'tin', 'serve', 'optional', 'defrosted', 'frozen']
-
-    #for each text piece in the list, set the score to the number of keywords found
-    for text in texts:
-        suitabilityScore = containsKeywords(text, keywords)
-
-        #increment the score if the text contains brackets or a number
-        if (containsBrackets(text)):
-            suitabilityScore += 1
-        
-        if (containsNumber(text)):
-            suitabilityScore += 1
-
-        #add the text to the dictionary with an associated value of its score
-        suitability[text] = suitabilityScore
-
-    size = len(suitability.keys())
-
-    if (size == 0):
+    try:
+        return parse_ingredient(ingredientText).name.text
+    except(Exception):
         return None
-    
-    #initialise an iterator of the dictionary and get the first key-value pair
-    iterator = iter(suitability.items())
-    minScoreText, minScore = next(iterator)
-
-    if (size == 1):
-        return minScoreText
-
-    #iterate over the remaining key-value pairs, and reassign the minimum if necessary
-    for key, value in iterator:
-        if (value < minScore):
-            minScoreText = key
-            minScore = value
-
-    #return the peice of text with the lowest score
-    return minScoreText

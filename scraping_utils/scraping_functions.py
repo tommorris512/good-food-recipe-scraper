@@ -8,45 +8,41 @@ from text_utils.text_manipulation import timeStringToMinutes, findFirstNumber, f
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
 
 
-def obtainIngredients(ingredients: ResultSet[any]) -> Tuple[List[str]]:
+def obtainIngredients(ingredients: ResultSet[any], precise: bool) -> Tuple[List[str]]:
     """
     Finds the measured and raw ingredients from the ingredients content of a recipe page.
 
     Adds the listed ingredients to a measured ingredients list. 
-    For each ingredient, the raw ingredient is extracted by accessing the anchored section of text, or, if this does not exist, by splicing with HTML comments and finding the most likely raw ingredient name.
+    The raw ingredients are found using the NLP parse_ingredient, or from the achor tag's text if it exists and additional precision is not used.
     
     Args:
         ingredients (ResultSet[any]): The content of the ingredients list from a recipe page
+        precise (bool): Determines whether additional precision should be used for obtaining ingredient names
 
     Returns:
         Tuple[List[str]]: The lists of both raw and measured ingredients obtained from the content parsed
     """
 
-    measuredIngredients = []
-    rawIngredients = []
+    #initialise the raw and measured ingredients as sets
+    measuredIngredients = set()
+    rawIngredients = set()
 
     #for each ingredient in the document, add it to the measured ingredient list
     for ingredient in ingredients:
-        measuredIngredients.append(ingredient.get_text())
+        ingredientText = ingredient.get_text()
+        measuredIngredients.add(ingredientText)
 
-        #attempt to find the raw ingredient name in an anchor tag and add it
         anchorTag = ingredient.find('a', class_='link--styled')
-        if anchorTag:
-            rawIngredients.append(anchorTag.get_text(strip=True).replace(',', ''))
 
-        #otherwise attempt to find the first comment separator and choose the raw ingredient name
+        if (precise or not(anchorTag)):
+            rawIngredient = findRawIngredient(ingredientText)
+
+            if (rawIngredient):
+                rawIngredients.add(rawIngredient)
         else:
-            ingredient_strings = []
+            rawIngredients.add(anchorTag.get_text(strip=True).replace(',', ''))
 
-            # Iterate through the contents of the <li> tag
-            for content in ingredient.contents:
-                # Check if the content is a NavigableString (text node)
-                if isinstance(content, str) and (content.strip()):
-                    ingredient_strings.append(str(content).replace(',','').strip())
-
-            rawIngredients.append(findRawIngredient(ingredient_strings))
-
-    return rawIngredients, measuredIngredients
+    return list(rawIngredients), list(measuredIngredients)
 
 
 def obtainNutrients(nutritionalContent: ResultSet[any]) -> Dict[str, float]:
@@ -133,7 +129,7 @@ def getRecipeUrlsFromPages(startPage: int, endPage: int) -> Set[str]:
     return recipeUrls 
 
 
-def getRecipeDetails(recipeUrl: str) -> Tuple[any] | None:
+def getRecipeDetails(recipeUrl: str, precise: bool) -> Tuple[any] | None:
     """
     Finds the recipe details from a given url.
 
@@ -141,6 +137,7 @@ def getRecipeDetails(recipeUrl: str) -> Tuple[any] | None:
     
     Args:
         recipeUrl (str): The recipe page url to scrape from
+        precise (bool): Determines whether additional precision should be used for obtaining ingredient names
 
     Returns:
         Tuple[any] | None: The tuple of recipe attributes scraped from the url or None if the page cannot be reached
@@ -178,7 +175,7 @@ def getRecipeDetails(recipeUrl: str) -> Tuple[any] | None:
 
         #obtain the list of ingredients and initialise measured and raw ingredient list
         ingredients = soup.find('section', class_='recipe__ingredients').find_all('li')
-        rawIngredients, measuredIngredients = obtainIngredients(ingredients)
+        rawIngredients, measuredIngredients = obtainIngredients(ingredients, precise)
 
         #obtain the author div of the page
         authorDiv = soup.find('div', class_='author-link')
